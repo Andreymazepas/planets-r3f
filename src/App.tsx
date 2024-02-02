@@ -1,35 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { PerspectiveCamera, useTexture } from '@react-three/drei';
+import { useRef } from 'react';
+import { DoubleSide, Mesh } from 'three';
 
-function App() {
-  const [count, setCount] = useState(0)
+const Plane = () => {
+  const texture = useTexture('../assets/checker_tile.png');
+  const planeRef = useRef<Mesh>(
+    new Mesh()
+  );
+
+  useFrame(() => {
+    if (planeRef.current === undefined) return;
+    planeRef.current.rotation.x += 0.01;
+    planeRef.current.rotation.y += 0.01;
+  }
+  )
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <mesh ref={planeRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+      <planeGeometry args={[10, 10]} />
+      <meshStandardMaterial map={texture} side={DoubleSide} />
+    </mesh>
   )
+}
+
+function App() {
+
+  return (
+    <Canvas>
+      <PerspectiveCamera
+        makeDefault
+        position={[0, 0, 10]}
+        fov={75}
+        near={0.1}
+        far={1000}
+      />
+      <ambientLight />
+      <pointLight position={[10, 10, 10]} />
+      <Plane />
+    </Canvas>
+  )
+
+
 }
 
 export default App
