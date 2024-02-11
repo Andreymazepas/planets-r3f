@@ -57,7 +57,7 @@ const Experience = () => {
     }
     setSelectedPlanet(index);
     const correctedY = PLANET_DATA[index].position[1] + (1 - PLANET_DATA[index].size);
-    setPlanetPos(new Vector3(-PLANET_DATA[index].position[0], -correctedY, -PLANET_DATA[index].position[2]));
+    setPlanetPos(new Vector3(-PLANET_DATA[index].position[0] - 2, -correctedY, -PLANET_DATA[index].position[2]));
   }
 
   useFrame(() => {
@@ -94,16 +94,16 @@ const Experience = () => {
       <spotLight ref={spotLightRef} position={[3, 5, 5]} intensity={0} angle={0.8} castShadow />
       <spotLightHelper args={[spotLightRef.current]} />
       <mesh position={[0, 0, -2]} ref={wallRef} receiveShadow>
-        <planeGeometry args={[10, 10]} />
+        <planeGeometry args={[20, 20]} />
         <meshStandardMaterial color={'gray'} side={DoubleSide} transparent />
       </mesh>
       <mesh position={[0, -1, 0]} receiveShadow rotation={
         [Math.PI / 2, 0, 0]
       } ref={floorRef} >
-        <planeGeometry args={[10, 10]} />
+        <planeGeometry args={[20, 20]} />
         <meshStandardMaterial color={'gray'} side={DoubleSide} transparent />
       </mesh>
-      <ContactShadows opacity={1} width={1} height={1} position={[0, -0.99, 0]} scale={10} blur={2} far={10} resolution={256} color="#000000" />
+      <ContactShadows opacity={0.5} width={1} height={1} position={[0, -0.99, 0]} scale={10} blur={2} far={10} resolution={256} color="#000000" />
       <group ref={groupRef}>
         {PLANET_DATA.map((planet, index) => (
           <mesh key={index} position={planet.position} onClick={() => handleClick(index)} castShadow >
@@ -126,7 +126,7 @@ function App() {
         ['black']
       } />
       <ambientLight intensity={0.5} />
-      <PerspectiveCamera makeDefault position={[3, 4, 7]} />
+      <PerspectiveCamera makeDefault position={[0, 1, 7]} />
       <Experience />
 
     </Canvas>
