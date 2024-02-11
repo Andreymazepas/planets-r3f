@@ -1,162 +1,136 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Text, useTexture } from '@react-three/drei';
-import React, { ReactElement, useRef } from 'react';
-import { DoubleSide, Group, Mesh, PointLight, RepeatWrapping, Vector3 } from 'three';
+import { ContactShadows, OrbitControls, PerspectiveCamera, } from '@react-three/drei';
+import React, { useRef } from 'react';
+import { DoubleSide, Group, Mesh, SpotLight, Vector3 } from 'three';
 
-const Plane = ({ ready, text }: { ready: boolean, text: string }) => {
-  const texture = useTexture('../assets/checker_tile.png');
-  texture.repeat.set(1, 1);
-  texture.wrapS = texture.wrapT = RepeatWrapping;
-  const planeRef = useRef<Mesh>(
+
+const PLANET_DATA = [
+  {
+    name: 'hotpink',
+    position: [-15, -15, -28],
+    size: 1,
+    text: 'pink',
+    color: 'hotpink'
+  },
+  {
+    name: 'green',
+    position: [15, 1, -28],
+    size: 1.5,
+    text: 'no',
+    color: 'green'
+
+  },
+  {
+    name: 'blue',
+    position: [15, -15, -28],
+    text: 'blue',
+    size: 0.8,
+    color: 'blue'
+  }
+]
+
+
+
+const Experience = () => {
+  const [ready, setReady] = React.useState(false);
+  const [selectedPlanet, setSelectedPlanet] = React.useState(-1);
+  const [planetPos, setPlanetPos] = React.useState<Vector3>(new Vector3(0, 0, 0));
+  const groupRef = useRef<Group>(
+    new Group()
+  );
+  const spotLightRef = useRef<SpotLight>(
+    new SpotLight()
+  );
+  const wallRef = useRef<Mesh>(
     new Mesh()
   );
-  const planeRef2 = useRef<Mesh>(
+  const floorRef = useRef<Mesh>(
     new Mesh()
   );
-  const lightRef = useRef<PointLight>(
-    new PointLight()
-  );
+
+  const handleClick = (index: number) => {
+    if (selectedPlanet === index) {
+      setSelectedPlanet(-1);
+      setReady(false);
+      setPlanetPos(new Vector3(0, 0, 0));
+      return;
+    }
+    setSelectedPlanet(index);
+    const correctedY = PLANET_DATA[index].position[1] + (1 - PLANET_DATA[index].size);
+    setPlanetPos(new Vector3(-PLANET_DATA[index].position[0], -correctedY, -PLANET_DATA[index].position[2]));
+  }
 
   useFrame(() => {
-    if (planeRef.current === undefined) return;
+    if (groupRef.current === undefined) return;
+    groupRef.current.position.lerp(planetPos, 0.01);
+    if (groupRef.current.position.distanceTo(planetPos) < 5 && selectedPlanet !== -1) {
+      setReady(true);
+    }
     if (ready) {
-      // make planes visible with a fade in effect
-      if (planeRef.current.material.opacity < 1) {
-        planeRef.current.material.opacity += 0.01;
+      if (spotLightRef.current.intensity < 100) {
+        spotLightRef.current.intensity += 0.1;
       }
-      if (planeRef2.current.material.opacity < 1) {
-        planeRef2.current.material.opacity += 0.01;
-      }
-      // make light visible with a fade in effect
-      if (lightRef.current.intensity < 70) {
-        lightRef.current.intensity += 0.1;
+      if (wallRef.current.material.opacity < 1) {
+        wallRef.current.material.opacity += 0.01;
+        floorRef.current.material.opacity += 0.01;
       }
     } else {
-      if (planeRef.current.material.opacity > 0) {
-        planeRef.current.material.opacity -= 0.01;
+      if (spotLightRef.current.intensity > 0) {
+        spotLightRef.current.intensity -= 0.1;
       }
-      if (planeRef2.current.material.opacity > 0) {
-        planeRef2.current.material.opacity -= 0.01;
-      }
-      if (lightRef.current.intensity > 0) {
-        lightRef.current.intensity -= 0.1;
+      if (wallRef.current.material.opacity > 0) {
+        wallRef.current.material.opacity -= 0.01;
+        floorRef.current.material.opacity -= 0.01;
       }
     }
+
+
+
+
   });
 
   return (
     <>
-      <mesh ref={planeRef} position={[0, 0, -5]} receiveShadow castShadow>
-        <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial map={texture} side={DoubleSide} transparent opacity={0} />
+      <spotLight ref={spotLightRef} position={[3, 5, 5]} intensity={0} angle={0.8} castShadow />
+      <spotLightHelper args={[spotLightRef.current]} />
+      <mesh position={[0, 0, -2]} ref={wallRef} receiveShadow>
+        <planeGeometry args={[10, 10]} />
+        <meshStandardMaterial color={'gray'} side={DoubleSide} transparent />
       </mesh>
-      <mesh ref={planeRef2} position={[0, -5, 0]} rotation={
-        [-Math.PI / 2, 0, 0]
-      } receiveShadow castShadow>
-        <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial map={texture} side={DoubleSide} transparent opacity={0} />
+      <mesh position={[0, -1, 0]} receiveShadow rotation={
+        [Math.PI / 2, 0, 0]
+      } ref={floorRef} >
+        <planeGeometry args={[10, 10]} />
+        <meshStandardMaterial color={'gray'} side={DoubleSide} transparent />
       </mesh>
-      <pointLight ref={lightRef} position={[0, 0, 0]} intensity={0} />
-      <Text
-        position={[2, -1, 0]}
-        color="black"
-        fontSize={1}
-        maxWidth={30}
-        lineHeight={1}
-        letterSpacing={0.02}
-        textAlign="center"
-        anchorX="center"
-        anchorY="middle"
-      >
-        {ready ? text : ''}
-      </Text>
+      <ContactShadows opacity={1} width={1} height={1} position={[0, -0.99, 0]} scale={10} blur={2} far={10} resolution={256} color="#000000" />
+      <group ref={groupRef}>
+        {PLANET_DATA.map((planet, index) => (
+          <mesh key={index} position={planet.position} onClick={() => handleClick(index)} castShadow >
+            <sphereGeometry args={[planet.size, 32, 32]} />
+            <meshStandardMaterial color={planet.color} />
+          </mesh>))}
+      </group>
     </>
-  )
-}
-
-const CamGroup = ({ children, position, setReady }: { children: ReactElement, position: [x: number, y: number, z: number], setReady: (arg0: boolean) => void }) => {
-  const groupRef = useRef<Group>(
-    new Group()
-  );
-
-  useFrame(() => {
-    if (groupRef.current === undefined) return;
-    //groupRef.current.rotation.y += 0.01;
-    // interpolate between the current position and the target position
-
-    const isResetting = position[0] === 0 && position[1] === 0 && position[2] === 0;
-    if (isResetting) {
-      // if the group is resetting, set ready to false
-      setReady(false);
-    }
-    groupRef.current.position.lerp(new Vector3(position[0], position[1], position[2]), isResetting ? 0.01 : 0.01);
-
-    // if the group is close enough to the target position, set ready to true
-    if (groupRef.current.position.distanceTo(new Vector3(position[0], position[1], position[2])) < 5 && !isResetting) {
-      console.log('ready')
-      setReady(true);
-    }
-  }
-  )
-
-  return (
-    <group ref={groupRef}>
-      {children}
-    </group>
   )
 }
 
 function App() {
 
-  const [ready, setReady] = React.useState(false);
-  const [text, setText] = React.useState('' as string);
-  const [selectedPos, setSelectedPos] = React.useState<[a: number, b: number, c: number]>([0, 0, 0]);
 
   return (
-    <Canvas
+    <Canvas shadows dpr={[1, 2]}
     >
+      <OrbitControls />
       <color attach="background" args={
         ['black']
       } />
-      <CamGroup position={selectedPos} setReady={setReady}
-      >
-        <>
-          <PerspectiveCamera
-            makeDefault
-            position={[0, 0, 10]}
-            fov={75}
-            near={0.1}
-            far={1000}
-          />
-          <Plane ready={ready} text={text} />
-        </>
-      </CamGroup>
+      <ambientLight intensity={0.5} />
+      <PerspectiveCamera makeDefault position={[3, 4, 7]} />
+      <Experience />
 
-      <ambientLight intensity={1} />
-      <mesh castShadow receiveShadow position={[-30, -30, -30]} onClick={
-        () => { setSelectedPos(selectedPos[2] === 0 ? [-28, -28, -28] : [0, 0, 0]); setText("pink") }
-      }>
-        <sphereGeometry args={[1, 32, 32]} />
-        <meshStandardMaterial color="hotpink" />
-      </mesh>
-
-      <mesh castShadow receiveShadow position={[13, 0, -30]} onClick={
-        () => { setSelectedPos(selectedPos[2] === 0 ? [15, 2, -28] : [0, 0, 0]); setText("u r gay") }
-      }>
-        <sphereGeometry args={[1, 32, 32]} />
-        <meshStandardMaterial color="green" />
-      </mesh>
-
-      <mesh castShadow receiveShadow position={[-13, 0, -30]} onClick={
-        () => { setSelectedPos(selectedPos[2] === 0 ? [-11, 2, -28] : [0, 0, 0]); setText("hi") }
-      }>
-        <sphereGeometry args={[1, 32, 32]} />
-        <meshStandardMaterial color="blue" />
-      </mesh>
     </Canvas>
   )
-
-
 }
 
 export default App
