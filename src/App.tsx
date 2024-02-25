@@ -1,34 +1,76 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { ContactShadows, OrbitControls, PerspectiveCamera, } from '@react-three/drei';
-import React, { useRef } from 'react';
-import { DoubleSide, Group, Mesh, SpotLight, Vector3 } from 'three';
+import { ContactShadows, Environment, OrbitControls, PerspectiveCamera, Stars, useTexture, } from '@react-three/drei';
+import React, { useEffect, useRef } from 'react';
+import { AmbientLight, BackSide, DirectionalLight, DoubleSide, Group, Mesh, SpotLight, Vector3 } from 'three';
 
 
 const PLANET_DATA = [
   {
-    name: 'hotpink',
+    name: 'jupiter',
     position: [-15, -15, -28],
     size: 1,
     text: 'pink',
-    color: 'hotpink'
+    color: 'hotpink',
+    texture: '2k_jupiter.jpg'
   },
   {
-    name: 'green',
+    name: 'neptune',
     position: [15, 1, -28],
     size: 1.5,
     text: 'no',
-    color: 'green'
-
+    color: 'green',
+    texture: '2k_neptune.jpg'
   },
   {
-    name: 'blue',
+    name: 'mars',
     position: [15, -15, -28],
     text: 'blue',
     size: 0.8,
-    color: 'blue'
+    color: 'blue',
+    texture: '2k_mars.jpg'
+  },
+  {
+    name: 'earth',
+    position: [-15, 1, -28],
+    size: 1,
+    text: 'green',
+    color: 'green',
+    texture: '2k_earth_daymap.jpg'
+  },
+  {
+    name: 'venus',
+    position: [0, 0, -28],
+    size: 1,
+    text: 'yellow',
+    color: 'yellow',
+    texture: '2k_venus_surface.jpg'
+  },
+  {
+    name: 'mercury',
+    position: [0, -15, -28],
+    size: 0.5,
+    text: 'orange',
+    color: 'orange',
+    texture: '2k_mercury.jpg'
+  },
+  {
+    name: 'uranus',
+    position: [0, 15, -28],
+    size: 1.5,
+    text: 'blue',
+    color: 'blue',
+    texture: '2k_uranus.jpg'
+  },
+  {
+    name: 'saturn',
+    position: [-15, 15, -28],
+    size: 1.5,
+    text: 'yellow',
+    color: 'yellow',
+    texture: '2k_saturn.jpg'
   }
-]
 
+]
 
 
 const Experience = () => {
@@ -47,6 +89,20 @@ const Experience = () => {
   const floorRef = useRef<Mesh>(
     new Mesh()
   );
+
+  const directionalLightRef = useRef<DirectionalLight>(
+    new DirectionalLight()
+  );
+  const ambientLightRef = useRef<AmbientLight>(
+    new AmbientLight()
+  );
+
+  const environmentTexture = useTexture('../assets/2k_stars_milky_way.jpg');
+  // make a structure to save all the planets textures, then load then accordinglt
+  const textures = [];
+  for (let i = 0; i < PLANET_DATA.length; i++) {
+    textures.push(useTexture(`../assets/${PLANET_DATA[i].texture}`));
+  }
 
   const handleClick = (index: number) => {
     if (selectedPlanet === index) {
@@ -67,12 +123,22 @@ const Experience = () => {
       setReady(true);
     }
     if (ready) {
-      if (spotLightRef.current.intensity < 100) {
+      if (spotLightRef.current.intensity < 10) {
         spotLightRef.current.intensity += 0.1;
       }
       if (wallRef.current.material.opacity < 1) {
         wallRef.current.material.opacity += 0.01;
         floorRef.current.material.opacity += 0.01;
+      }
+      if (directionalLightRef.current.intensity > 0) {
+        directionalLightRef.current.intensity -= 0.1;
+      }
+      if (ambientLightRef.current.intensity < 0.5) {
+        ambientLightRef.current.intensity += 0.1;
+      }
+      if (!wallRef.current.material.depthTest) {
+        wallRef.current.material.depthTest = true;
+        floorRef.current.material.depthTest = true;
       }
     } else {
       if (spotLightRef.current.intensity > 0) {
@@ -82,17 +148,26 @@ const Experience = () => {
         wallRef.current.material.opacity -= 0.01;
         floorRef.current.material.opacity -= 0.01;
       }
+      if (ambientLightRef.current.intensity > 0.1) {
+        ambientLightRef.current.intensity -= 0.1;
+      }
+
+      if (directionalLightRef.current.intensity < 5) {
+        directionalLightRef.current.intensity += 0.1;
+      }
+      if (wallRef.current.material.depthTest) {
+        wallRef.current.material.depthTest = false;
+        floorRef.current.material.depthTest = false;
+      }
     }
-
-
-
-
   });
 
   return (
     <>
-      <spotLight ref={spotLightRef} position={[3, 5, 5]} intensity={0} angle={0.8} castShadow />
+      <spotLight ref={spotLightRef} position={[3, 5, 5]} intensity={0} angle={0.8} decay={0} distance={20} castShadow />
       <spotLightHelper args={[spotLightRef.current]} />
+      <directionalLight ref={directionalLightRef} position={[5, 0, 2]} intensity={5} />
+      <ambientLight ref={ambientLightRef} intensity={0.1} />
       <mesh position={[0, 0, -2]} ref={wallRef} receiveShadow>
         <planeGeometry args={[20, 20]} />
         <meshStandardMaterial color={'gray'} side={DoubleSide} transparent />
@@ -108,9 +183,10 @@ const Experience = () => {
         {PLANET_DATA.map((planet, index) => (
           <mesh key={index} position={planet.position} onClick={() => handleClick(index)} castShadow >
             <sphereGeometry args={[planet.size, 32, 32]} />
-            <meshStandardMaterial color={planet.color} />
+            <meshStandardMaterial map={textures[index]} />
           </mesh>))}
       </group>
+
     </>
   )
 }
@@ -125,8 +201,8 @@ function App() {
       <color attach="background" args={
         ['black']
       } />
-      <ambientLight intensity={0.5} />
       <PerspectiveCamera makeDefault position={[0, 1, 7]} />
+      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
       <Experience />
 
     </Canvas>
