@@ -1,7 +1,7 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { ContactShadows, Effects, Environment, OrbitControls, Outlines, PerspectiveCamera, Stars, Stats, useGLTF, useTexture, } from '@react-three/drei';
 import React, { useEffect, useRef } from 'react';
-import { AmbientLight, BackSide, Color, DirectionalLight, DoubleSide, Group, Mesh, MeshStandardMaterial, SpotLight, SpotLightShadow, Vector3 } from 'three';
+import { AmbientLight, BackSide, Color, DirectionalLight, DoubleSide, FrontSide, Group, Mesh, MeshStandardMaterial, SpotLight, SpotLightShadow, Vector3 } from 'three';
 import { Bloom, BrightnessContrast, EffectComposer, FXAA, Noise, Outline } from '@react-three/postprocessing';
 import useSound from 'use-sound';
 
@@ -127,6 +127,17 @@ const renderSaturnRing = () => {
   });
 
   return <primitive rotation={[0.1, 0, -0.2]} object={gltf.scene} position={SATURN_RING.position} scale={[2.5, 2.5, 2.5]} />
+}
+
+const renderSun = () => {
+  const sunTexture = useTexture('../assets/2k_sun.jpg');
+  return (
+    <mesh position={[0, 0, -28]}>
+      <sphereGeometry args={[10, 64, 64]} />
+      <meshBasicMaterial map={sunTexture}
+      />
+    </mesh>
+  )
 }
 
 
@@ -276,6 +287,7 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
             <Outlines visible={hoverPlanet === index} color={"white"} />
           </mesh>))}
         {renderSaturnRing()}
+        {renderSun()}
       </group>
 
     </>
