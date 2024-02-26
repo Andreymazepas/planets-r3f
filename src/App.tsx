@@ -1,7 +1,7 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { ContactShadows, Effects, Environment, OrbitControls, Outlines, PerspectiveCamera, Stars, Stats, useGLTF, useTexture, } from '@react-three/drei';
 import React, { useEffect, useRef } from 'react';
-import { AmbientLight, BackSide, Color, DirectionalLight, DoubleSide, FrontSide, Group, Mesh, MeshStandardMaterial, SpotLight, SpotLightShadow, Vector3 } from 'three';
+import { AmbientLight, BackSide, Color, DirectionalLight, DoubleSide, FrontSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, SpotLight, SpotLightShadow, Vector3 } from 'three';
 import { Bloom, BrightnessContrast, EffectComposer, FXAA, Noise, Outline } from '@react-three/postprocessing';
 import useSound from 'use-sound';
 
@@ -116,17 +116,17 @@ const renderSaturnRing = () => {
   // override the material
   gltf.scene.traverse((child) => {
     if (child instanceof Mesh) {
-      child.material = new MeshStandardMaterial({
+      child.material = new MeshBasicMaterial({
         map: useTexture('/assets/2k_saturn_ring_alpha.png'),
-        metalness: 0.5,
-        roughness: 0.5,
+
         side: DoubleSide,
         transparent: true,
+
       });
     }
   });
 
-  return <primitive rotation={[0.1, 0, -0.2]} object={gltf.scene} position={SATURN_RING.position} scale={[2.5, 2.5, 2.5]} />
+  return <primitive rotation={[0.2, 0, -0.2]} object={gltf.scene} position={SATURN_RING.position} scale={[2.5, 2.5, 2.5]} />
 }
 
 const renderSun = () => {
