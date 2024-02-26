@@ -14,7 +14,8 @@ const PLANET_DATA = [
     size: 1,
     text: 'pink',
     color: 'hotpink',
-    texture: '2k_jupiter.jpg'
+    texture: '2k_jupiter.jpg',
+    audioPath: '../assets/HOLST The Planets 4. Jupiter the Bringer of Jollity - The Presidents Own U.S. Marine Band.mp3'
   },
   {
     name: 'neptune',
@@ -22,7 +23,8 @@ const PLANET_DATA = [
     size: 1.5,
     text: 'no',
     color: 'green',
-    texture: '2k_neptune.jpg'
+    texture: '2k_neptune.jpg',
+    audioPath: '../assets/HOLST The Planets 7. Neptune the Mystic - The Presidents Own U.S. Marine Band.mp3'
   },
   {
     name: 'mars',
@@ -30,7 +32,8 @@ const PLANET_DATA = [
     text: 'blue',
     size: 0.8,
     color: 'blue',
-    texture: '2k_mars.jpg'
+    texture: '2k_mars.jpg',
+    audioPath: '../assets/HOLST The Planets 5. Mars the Bringer of War - The Presidents Own U.S. Marine Band.mp3'
   },
   {
     name: 'earth',
@@ -38,7 +41,8 @@ const PLANET_DATA = [
     size: 1,
     text: 'green',
     color: 'green',
-    texture: '2k_earth_daymap.jpg'
+    texture: '2k_earth_daymap.jpg',
+    audioPath: undefined
   },
   {
     name: 'venus',
@@ -46,7 +50,8 @@ const PLANET_DATA = [
     size: 1,
     text: 'yellow',
     color: 'yellow',
-    texture: '2k_venus_surface.jpg'
+    texture: '2k_venus_surface.jpg',
+    audioPath: '../assets/HOLST The Planets 2. Venus the Bringer of Peace - The Presidents Own U.S. Marine Band.mp3'
   },
   {
     name: 'mercury',
@@ -54,7 +59,8 @@ const PLANET_DATA = [
     size: 0.5,
     text: 'orange',
     color: 'orange',
-    texture: '2k_mercury.jpg'
+    texture: '2k_mercury.jpg',
+    audioPath: '../assets/HOLST The Planets 3. Mercury the Winged Messenger - The Presidents Own U.S. Marine Band.mp3'
   },
   {
     name: 'uranus',
@@ -62,7 +68,8 @@ const PLANET_DATA = [
     size: 1.5,
     text: 'blue',
     color: 'blue',
-    texture: '2k_uranus.jpg'
+    texture: '2k_uranus.jpg',
+    audioPath: '../assets/HOLST The Planets 6. Uranus the Magician - The Presidents Own U.S. Marine Band.mp3'
   },
   {
     name: 'saturn',
@@ -70,7 +77,8 @@ const PLANET_DATA = [
     size: 1.5,
     text: 'yellow',
     color: 'yellow',
-    texture: '2k_saturn.jpg'
+    texture: '2k_saturn.jpg',
+    audioPath: '../assets/HOLST The Planets 5. Saturn the Bringer of Old Age - The Presidents Own U.S. Marine Band.mp3'
   }
 
 ]
@@ -78,7 +86,7 @@ const PLANET_DATA = [
 
 
 
-const Experience = ({ setText, reset }: { setText: (text: string) => void, reset: boolean }) => {
+const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex: (index: number) => void, reset: boolean }) => {
   const [ready, setReady] = React.useState(false);
   const [selectedPlanet, setSelectedPlanet] = React.useState(-1);
   const [planetPos, setPlanetPos] = React.useState<Vector3>(new Vector3(0, 0, 0));
@@ -126,9 +134,9 @@ const Experience = ({ setText, reset }: { setText: (text: string) => void, reset
 
   const resetEverything = () => {
     setSelectedPlanet(-1);
+    setSelectedPlanetIndex(-1);
     setReady(false);
     setPlanetPos(new Vector3(0, 0, 0));
-    setText('');
   }
 
   // if reset is true, reset the state
@@ -144,7 +152,7 @@ const Experience = ({ setText, reset }: { setText: (text: string) => void, reset
     groupRef.current.position.lerp(planetPos, 0.01);
     if (groupRef.current.position.distanceTo(planetPos) < 5 && selectedPlanet !== -1) {
       setReady(true);
-      setText(PLANET_DATA[selectedPlanet].name);
+      setSelectedPlanetIndex(selectedPlanet);
     }
     if (ready) {
       if (spotLightRef.current.intensity < 10) {
@@ -230,6 +238,7 @@ const Experience = ({ setText, reset }: { setText: (text: string) => void, reset
 function App() {
   const [ready, setReady] = React.useState(false);
   const [text, setText] = React.useState('');
+  const [selectedPlanet, setSelectedPlanet] = React.useState(-1);
   const startSound = "../assets/symphony-orchestra-tuning-before-concert-34066.mp3";
   const [playStart, { stopStart }] = useSound(startSound, { volume: 0.5 });
   const [reset, setReset] = React.useState(false);
@@ -265,18 +274,18 @@ function App() {
         <PerspectiveCamera makeDefault position={[0, 1, 7]} />
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
-        {ready && <Experience setText={setText} reset={reset} />}
+        {ready && <Experience setSelectedPlanetIndex={setSelectedPlanet} reset={reset} />}
 
       </Canvas>
       {!ready && <div style={{ position: 'absolute', top: 0, left: 0, color: 'white' }}>
         press to play
         <button onClick={handleClick}>play</button>
       </div>}
-      {text && <div style={{ position: 'absolute', top: "50%", right: "30%", color: 'white', background: "#3939ff55", borderRadius: "32px", fontSize: "10rem" }}>
-        {text}
+      {(selectedPlanet !== -1) && <div style={{ position: 'absolute', top: "50%", right: "30%", color: 'white', background: "#3939ff55", borderRadius: "32px", fontSize: "10rem" }}>
+        {PLANET_DATA[selectedPlanet] ? PLANET_DATA[selectedPlanet].name : ''}
         <audio autoPlay controls>
           <source
-            src={`../assets/HOLST The Planets 1. Mars the Bringer of War - The Presidents Own U.S. Marine Band.m4a`}
+            src={PLANET_DATA[selectedPlanet].audioPath}
             type="audio/mp4" />
         </audio>
       </div>}
