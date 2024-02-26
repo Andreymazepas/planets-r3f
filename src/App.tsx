@@ -11,8 +11,8 @@ const PLANET_DATA = [
   {
     name: 'Jupiter',
     subtitle: 'The bringer of jollity',
-    position: [-15, -15, -28],
-    size: 1,
+    position: [-8, 5, -10],
+    size: 2,
     text: 'pink',
     color: 'hotpink',
     texture: '2k_jupiter.jpg',
@@ -23,7 +23,7 @@ const PLANET_DATA = [
   {
     name: 'Neptune',
     subtitle: 'The mystic',
-    position: [15, 1, -28],
+    position: [2, 6, -15],
     size: 1.5,
     text: 'no',
     color: 'green',
@@ -35,20 +35,20 @@ const PLANET_DATA = [
   {
     name: 'Mars',
     subtitle: 'The bringer of war',
-    position: [15, -15, -28],
+    position: [1, -2, -16],
     text: 'blue',
     size: 0.8,
     color: 'blue',
     texture: '2k_mars.jpg',
-    audioPath: '../assets/HOLST The Planets 5. Mars the Bringer of War - The Presidents Own U.S. Marine Band.mp3',
+    audioPath: '../assets/HOLST The Planets 1. Mars the Bringer of War - The Presidents Own U.S. Marine Band.mp3',
     description: "Mars is named after the Roman god of war. The music is martial and aggressive, reflecting the planet's red color and the god's association with war.",
     tilt: 0
   },
   {
     name: 'Earth',
     subtitle: 'The ancestral mother',
-    position: [-15, 1, -28],
-    size: 1,
+    position: [-5, 1, -10],
+    size: 0.7,
     text: 'green',
     color: 'green',
     texture: '2k_earth_daymap.jpg',
@@ -59,8 +59,8 @@ const PLANET_DATA = [
   {
     name: 'Venus',
     subtitle: 'The bringer of peace',
-    position: [0, 0, -28],
-    size: 1,
+    position: [-5, -6, -6],
+    size: 0.75,
     text: 'yellow',
     color: 'yellow',
     texture: '2k_venus_surface.jpg',
@@ -71,7 +71,7 @@ const PLANET_DATA = [
   {
     name: 'Mercury',
     subtitle: 'The winged messenger',
-    position: [0, -15, -28],
+    position: [-1, -5, -10],
     size: 0.5,
     text: 'orange',
     color: 'orange',
@@ -83,7 +83,7 @@ const PLANET_DATA = [
   {
     name: 'Uranus',
     subtitle: 'The magician',
-    position: [0, 15, -28],
+    position: [8, 2.6, -10],
     size: 1.5,
     text: 'blue',
     color: 'blue',
@@ -95,7 +95,7 @@ const PLANET_DATA = [
   {
     name: 'Saturn',
     subtitle: 'The bringer of old age',
-    position: [-15, 15, -28],
+    position: [-12, -8, -20],
     size: 1.5,
     text: 'yellow',
     color: 'yellow',
@@ -132,7 +132,7 @@ const renderSaturnRing = () => {
 const renderSun = () => {
   const sunTexture = useTexture('../assets/2k_sun.jpg');
   return (
-    <mesh position={[0, 0, -28]}>
+    <mesh position={[10, -10, 3]}>
       <sphereGeometry args={[10, 64, 64]} />
       <meshBasicMaterial map={sunTexture}
       />
@@ -264,7 +264,7 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
   return (
     <>
       <spotLight ref={spotLightRef} position={[3, 5, 5]} intensity={0} angle={0.8} decay={0} distance={15} castShadow penumbra={0.2} />
-      <directionalLight ref={directionalLightRef} position={[5, 0, 2]} intensity={5} />
+      <directionalLight ref={directionalLightRef} position={[5, -3, 5]} intensity={5} />
       <ambientLight ref={ambientLightRef} intensity={0.1} />
       <mesh position={[0, 0, -2]} ref={wallRef} receiveShadow>
         <planeGeometry args={[20, 20]} />
@@ -276,8 +276,8 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
         <planeGeometry args={[20, 20]} />
         <meshStandardMaterial color={'gray'} side={DoubleSide} transparent />
       </mesh>
-      <ContactShadows opacity={0.5} width={2} height={1} position={[0, -0.99, 0]} scale={10} blur={1} far={10} resolution={256} color="#000000" />
-      <group ref={groupRef}>
+      <ContactShadows opacity={0.5} width={2} height={1} position={[0, -0.99, 0]} scale={10} blur={1} far={10} resolution={256} color="#000000" visible={selectedPlanet !== -1} />
+      <group ref={groupRef} position={[0, 0, 30]}>
         {PLANET_DATA.map((planet, index) => (
           <mesh key={index} position={planet.position} onClick={() => handleClick(index)} castShadow onPointerEnter={() => onHover(index)} onPointerLeave={onUnhover} rotation={[
             0, 0, planet.tilt
@@ -299,13 +299,13 @@ function App() {
   const [text, setText] = React.useState('');
   const [selectedPlanet, setSelectedPlanet] = React.useState(-1);
   const startSound = "../assets/symphony-orchestra-tuning-before-concert-34066.mp3";
-  const [playStart, { stopStart }] = useSound(startSound, { volume: 0.5 });
+  const [playStart, { stop }] = useSound(startSound, { volume: 0.5 });
   const [reset, setReset] = React.useState(false);
   const [showCredits, setShowCredits] = React.useState(false);
 
   const handleClick = () => {
     setReady(true);
-    //playStart();
+    playStart();
   }
 
   useEffect(() => {
@@ -317,14 +317,18 @@ function App() {
     }
   }, [reset]);
 
+  useEffect(() => {
+    if (selectedPlanet !== -1) {
+      stop();
+    }
+  }, [selectedPlanet, stop]);
+
   return (
     <>
       <Canvas shadows="soft" dpr={[1, 2]}
       >
         <EffectComposer >
-          {/* <Noise opacity={0.02} />
-        <Bloom luminanceThreshold={0.1} luminanceSmoothing={0.9} height={300} />
-        <BrightnessContrast brightness={0.1} contrast={0.1} /> */}
+          <BrightnessContrast brightness={0} contrast={0.1} />
           <FXAA />
         </EffectComposer>
         <OrbitControls />
@@ -375,7 +379,7 @@ function App() {
       <div className="bottomInfo">
         <button className="creditsButton" onClick={() => setShowCredits(true)}>Credits</button>
         <a>Github</a>
-        <a>Twitter</a>
+        <a href="http://twitter.com/amzp_dat">Twitter</a>
         <a>Instagram</a>
       </div>
 
