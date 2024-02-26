@@ -1,8 +1,8 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { ContactShadows, Effects, Environment, OrbitControls, Outlines, PerspectiveCamera, Stars, Stats, useGLTF, useTexture, } from '@react-three/drei';
+import { ContactShadows, OrbitControls, Outlines, PerspectiveCamera, Stars, useGLTF, useTexture, } from '@react-three/drei';
 import React, { useEffect, useRef } from 'react';
-import { AmbientLight, BackSide, Color, DirectionalLight, DoubleSide, FrontSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, SpotLight, SpotLightShadow, Vector3 } from 'three';
-import { Bloom, BrightnessContrast, EffectComposer, FXAA, Noise, Outline } from '@react-three/postprocessing';
+import { AmbientLight, DirectionalLight, DoubleSide, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, SpotLight, Texture, Vector3 } from 'three';
+import { BrightnessContrast, EffectComposer, FXAA } from '@react-three/postprocessing';
 import useSound from 'use-sound';
 
 
@@ -149,7 +149,7 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
   const hoverSound = "/assets/405159__rayolf__btn_hover_2.wav";
 
 
-  const [playHover, { stopHover }] = useSound(hoverSound, { volume: 0.5 });
+  const [playHover] = useSound(hoverSound, { volume: 0.5 });
 
 
   const groupRef = useRef<Group>(
@@ -174,8 +174,9 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
   );
 
 
-  const textures = [];
+  const textures: (Texture | null | undefined)[] = [];
   for (let i = 0; i < PLANET_DATA.length; i++) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     textures.push(useTexture(`/assets/${PLANET_DATA[i].texture}`));
   }
 
@@ -186,20 +187,15 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
     setPlanetPos(new Vector3(-PLANET_DATA[index].position[0] - 2, -correctedY, -PLANET_DATA[index].position[2] + (PLANET_DATA[index].name === 'Saturn' ? 1.5 : 0)));
   }
 
-  const resetEverything = () => {
-    setSelectedPlanet(-1);
-    setSelectedPlanetIndex(-1);
-    setReady(false);
-    setPlanetPos(new Vector3(0, 0, 0));
-  }
-
   // if reset is true, reset the state
   useEffect(() => {
     if (reset) {
-      console.log('resetting');
-      resetEverything();
+      setSelectedPlanet(-1);
+      setSelectedPlanetIndex(-1);
+      setReady(false);
+      setPlanetPos(new Vector3(0, 0, 0));
     }
-  }, [reset]);
+  }, [reset, setSelectedPlanetIndex]);
 
   useFrame(() => {
     if (groupRef.current === undefined) return;
@@ -212,9 +208,9 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
       if (spotLightRef.current.intensity < 10) {
         spotLightRef.current.intensity += 0.1;
       }
-      if (wallRef.current.material.opacity < 1) {
-        wallRef.current.material.opacity += 0.01;
-        floorRef.current.material.opacity += 0.01;
+      if ((wallRef.current.material as MeshStandardMaterial).opacity < 1) {
+        (wallRef.current.material as MeshStandardMaterial).opacity += 0.01;
+        (floorRef.current.material as MeshStandardMaterial).opacity += 0.01;
       }
       if (directionalLightRef.current.intensity > 0) {
         directionalLightRef.current.intensity -= 0.1;
@@ -222,28 +218,25 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
       if (ambientLightRef.current.intensity < 0.5) {
         ambientLightRef.current.intensity += 0.1;
       }
-      if (!wallRef.current.material.depthTest) {
-        wallRef.current.material.depthTest = true;
-        floorRef.current.material.depthTest = true;
+      if (!(wallRef.current.material as MeshStandardMaterial).depthTest) {
+        (wallRef.current.material as MeshStandardMaterial).depthTest = true;
+        (floorRef.current.material as MeshStandardMaterial).depthTest = true;
       }
     } else {
       if (spotLightRef.current.intensity > 0) {
         spotLightRef.current.intensity -= 0.1;
       }
-      if (wallRef.current.material.opacity > 0) {
-        wallRef.current.material.opacity -= 0.01;
-        floorRef.current.material.opacity -= 0.01;
+      if ((wallRef.current.material as MeshStandardMaterial).opacity > 0) {
+        (wallRef.current.material as MeshStandardMaterial).opacity -= 0.01;
+        (floorRef.current.material as MeshStandardMaterial).opacity -= 0.01;
       }
       if (ambientLightRef.current.intensity > 0.1) {
         ambientLightRef.current.intensity -= 0.1;
       }
 
-      if (directionalLightRef.current.intensity < 5) {
-        directionalLightRef.current.intensity += 0.1;
-      }
-      if (wallRef.current.material.depthTest) {
-        wallRef.current.material.depthTest = false;
-        floorRef.current.material.depthTest = false;
+      if ((wallRef.current.material as MeshStandardMaterial).depthTest) {
+        (wallRef.current.material as MeshStandardMaterial).depthTest = false;
+        (floorRef.current.material as MeshStandardMaterial).depthTest = false;
       }
     }
   });
@@ -279,7 +272,7 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
       <ContactShadows opacity={0.5} width={2} height={1} position={[0, -0.99, 0]} scale={10} blur={1} far={10} resolution={256} color="#000000" visible={selectedPlanet !== -1} />
       <group ref={groupRef} position={[0, 0, 30]}>
         {PLANET_DATA.map((planet, index) => (
-          <mesh key={index} position={planet.position} onClick={() => handleClick(index)} castShadow onPointerEnter={() => onHover(index)} onPointerLeave={onUnhover} rotation={[
+          <mesh key={index} position={new Vector3(...planet.position)} onClick={() => handleClick(index)} castShadow onPointerEnter={() => onHover(index)} onPointerLeave={onUnhover} rotation={[
             0, 0, planet.tilt
           ]}>
             <sphereGeometry args={[planet.size, 32, 32]} />
@@ -296,7 +289,6 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
 
 function App() {
   const [ready, setReady] = React.useState(false);
-  const [text, setText] = React.useState('');
   const [selectedPlanet, setSelectedPlanet] = React.useState(-1);
   const startSound = "/assets/symphony-orchestra-tuning-before-concert-34066.mp3";
   const [playStart, { stop }] = useSound(startSound, { volume: 0.5 });
@@ -311,7 +303,6 @@ function App() {
   useEffect(() => {
     if (reset) {
       setTimeout(() => {
-        console.log('resetting the reset');
         setReset(false);
       }, 1000);
     }
@@ -331,7 +322,6 @@ function App() {
           <BrightnessContrast brightness={0} contrast={0.1} />
           <FXAA />
         </EffectComposer>
-        {/* make a very limited orbit control, just to see slightly around the planets */}
         <OrbitControls
           enablePan={false}
           enableZoom={false}
@@ -349,7 +339,6 @@ function App() {
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
         {ready && <Experience setSelectedPlanetIndex={setSelectedPlanet} reset={reset} />}
-        <Stats />
       </Canvas>
       {!ready && <div className='glass startScreen'>
         <h1>THE PLANETS</h1>
