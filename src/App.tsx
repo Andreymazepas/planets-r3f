@@ -1,8 +1,8 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { ContactShadows, Effects, Environment, OrbitControls, PerspectiveCamera, Stars, useTexture, } from '@react-three/drei';
+import { ContactShadows, Effects, Environment, OrbitControls, Outlines, PerspectiveCamera, Stars, useTexture, } from '@react-three/drei';
 import React, { useEffect, useRef } from 'react';
 import { AmbientLight, BackSide, Color, DirectionalLight, DoubleSide, Group, Mesh, SpotLight, SpotLightShadow, Vector3 } from 'three';
-import { Bloom, BrightnessContrast, EffectComposer, Noise } from '@react-three/postprocessing';
+import { Bloom, BrightnessContrast, EffectComposer, FXAA, Noise, Outline } from '@react-three/postprocessing';
 import useSound from 'use-sound';
 
 
@@ -78,13 +78,17 @@ const PLANET_DATA = [
 
 
 
-const Experience = () => {
+const Experience = ({ setText, reset }: { setText: (text: string) => void, reset: boolean }) => {
   const [ready, setReady] = React.useState(false);
   const [selectedPlanet, setSelectedPlanet] = React.useState(-1);
   const [planetPos, setPlanetPos] = React.useState<Vector3>(new Vector3(0, 0, 0));
+  const [hoverPlanet, setHoverPlanet] = React.useState(-1);
   const hoverSound = "../assets/405159__rayolf__btn_hover_2.wav";
 
-  const [play, { stop }] = useSound(hoverSound, { volume: 0.5 });
+
+  const [playHover, { stopHover }] = useSound(hoverSound, { volume: 0.5 });
+
+
   const groupRef = useRef<Group>(
     new Group()
   );
@@ -114,22 +118,33 @@ const Experience = () => {
   }
 
   const handleClick = (index: number) => {
-    if (selectedPlanet === index) {
-      setSelectedPlanet(-1);
-      setReady(false);
-      setPlanetPos(new Vector3(0, 0, 0));
-      return;
-    }
     setSelectedPlanet(index);
+    setHoverPlanet(-1);
     const correctedY = PLANET_DATA[index].position[1] + (1 - PLANET_DATA[index].size);
     setPlanetPos(new Vector3(-PLANET_DATA[index].position[0] - 2, -correctedY, -PLANET_DATA[index].position[2]));
   }
+
+  const resetEverything = () => {
+    setSelectedPlanet(-1);
+    setReady(false);
+    setPlanetPos(new Vector3(0, 0, 0));
+    setText('');
+  }
+
+  // if reset is true, reset the state
+  useEffect(() => {
+    if (reset) {
+      console.log('resetting');
+      resetEverything();
+    }
+  }, [reset]);
 
   useFrame(() => {
     if (groupRef.current === undefined) return;
     groupRef.current.position.lerp(planetPos, 0.01);
     if (groupRef.current.position.distanceTo(planetPos) < 5 && selectedPlanet !== -1) {
       setReady(true);
+      setText(PLANET_DATA[selectedPlanet].name);
     }
     if (ready) {
       if (spotLightRef.current.intensity < 10) {
@@ -171,6 +186,17 @@ const Experience = () => {
     }
   });
 
+  const onHover = (index: number) => {
+    if (hoverPlanet !== index && !ready) {
+      playHover();
+      setHoverPlanet(index);
+    }
+  }
+
+  const onUnhover = () => {
+    setHoverPlanet(-1);
+  }
+
   return (
     <>
       <spotLight ref={spotLightRef} position={[3, 5, 5]} intensity={0} angle={0.8} decay={0} distance={15} castShadow penumbra={0.2} />
@@ -187,12 +213,13 @@ const Experience = () => {
         <planeGeometry args={[20, 20]} />
         <meshStandardMaterial color={'gray'} side={DoubleSide} transparent />
       </mesh>
-      <ContactShadows opacity={0.5} width={1} height={1} position={[0, -0.99, 0]} scale={10} blur={2} far={10} resolution={256} color="#000000" />
+      <ContactShadows opacity={0.5} width={2} height={1} position={[0, -0.99, 0]} scale={10} blur={1} far={10} resolution={256} color="#000000" />
       <group ref={groupRef}>
         {PLANET_DATA.map((planet, index) => (
-          <mesh key={index} position={planet.position} onClick={() => handleClick(index)} onPointerEnter={() => play()} castShadow >
+          <mesh key={index} position={planet.position} onClick={() => handleClick(index)} castShadow onPointerEnter={() => onHover(index)} onPointerLeave={onUnhover}>
             <sphereGeometry args={[planet.size, 32, 32]} />
             <meshStandardMaterial map={textures[index]} />
+            <Outlines visible={hoverPlanet === index} color={"white"} />
           </mesh>))}
       </group>
 
@@ -201,24 +228,63 @@ const Experience = () => {
 }
 
 function App() {
+  const [ready, setReady] = React.useState(false);
+  const [text, setText] = React.useState('');
+  const startSound = "../assets/symphony-orchestra-tuning-before-concert-34066.mp3";
+  const [playStart, { stopStart }] = useSound(startSound, { volume: 0.5 });
+  const [reset, setReset] = React.useState(false);
+
+  const handleClick = () => {
+    setReady(true);
+    //playStart();
+  }
+
+  useEffect(() => {
+    if (reset) {
+      setTimeout(() => {
+        console.log('resetting the reset');
+        setReset(false);
+      }, 1000);
+    }
+  }, [reset]);
 
   return (
-    <Canvas shadows="soft" dpr={[1, 2]}
-    >
-      <EffectComposer >
-        <Noise opacity={0.02} />
+    <>
+      <Canvas shadows="soft" dpr={[1, 2]}
+      >
+        <EffectComposer >
+          {/* <Noise opacity={0.02} />
         <Bloom luminanceThreshold={0.1} luminanceSmoothing={0.9} height={300} />
-        <BrightnessContrast brightness={0.1} contrast={0.1} />
-      </EffectComposer>
-      <OrbitControls />
-      <color attach="background" args={
-        ['black']
-      } />
-      <PerspectiveCamera makeDefault position={[0, 1, 7]} />
-      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-      <Experience />
+        <BrightnessContrast brightness={0.1} contrast={0.1} /> */}
+          <FXAA />
+        </EffectComposer>
+        <OrbitControls />
+        <color attach="background" args={
+          ['black']
+        } />
+        <PerspectiveCamera makeDefault position={[0, 1, 7]} />
+        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
-    </Canvas>
+        {ready && <Experience setText={setText} reset={reset} />}
+
+      </Canvas>
+      {!ready && <div style={{ position: 'absolute', top: 0, left: 0, color: 'white' }}>
+        press to play
+        <button onClick={handleClick}>play</button>
+      </div>}
+      {text && <div style={{ position: 'absolute', top: "50%", right: "30%", color: 'white', background: "#3939ff55", borderRadius: "32px", fontSize: "10rem" }}>
+        {text}
+        <audio autoPlay controls>
+          <source
+            src={`../assets/HOLST The Planets 1. Mars the Bringer of War - The Presidents Own U.S. Marine Band.m4a`}
+            type="audio/mp4" />
+        </audio>
+      </div>}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, color: 'white' }}>
+        <button onClick={() => setReset(true)}>reset</button>
+      </div>
+
+    </>
   )
 }
 
