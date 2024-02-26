@@ -1,7 +1,10 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { ContactShadows, Environment, OrbitControls, PerspectiveCamera, Stars, useTexture, } from '@react-three/drei';
+import { ContactShadows, Effects, Environment, OrbitControls, PerspectiveCamera, Stars, useTexture, } from '@react-three/drei';
 import React, { useEffect, useRef } from 'react';
-import { AmbientLight, BackSide, DirectionalLight, DoubleSide, Group, Mesh, SpotLight, Vector3 } from 'three';
+import { AmbientLight, BackSide, Color, DirectionalLight, DoubleSide, Group, Mesh, SpotLight, SpotLightShadow, Vector3 } from 'three';
+import { Bloom, BrightnessContrast, EffectComposer, Noise } from '@react-three/postprocessing';
+import useSound from 'use-sound';
+
 
 
 const PLANET_DATA = [
@@ -73,16 +76,22 @@ const PLANET_DATA = [
 ]
 
 
+
+
 const Experience = () => {
   const [ready, setReady] = React.useState(false);
   const [selectedPlanet, setSelectedPlanet] = React.useState(-1);
   const [planetPos, setPlanetPos] = React.useState<Vector3>(new Vector3(0, 0, 0));
+  const hoverSound = "../assets/405159__rayolf__btn_hover_2.wav";
+
+  const [play, { stop }] = useSound(hoverSound, { volume: 0.5 });
   const groupRef = useRef<Group>(
     new Group()
   );
   const spotLightRef = useRef<SpotLight>(
     new SpotLight()
   );
+
   const wallRef = useRef<Mesh>(
     new Mesh()
   );
@@ -164,7 +173,7 @@ const Experience = () => {
 
   return (
     <>
-      <spotLight ref={spotLightRef} position={[3, 5, 5]} intensity={0} angle={0.8} decay={0} distance={20} castShadow />
+      <spotLight ref={spotLightRef} position={[3, 5, 5]} intensity={0} angle={0.8} decay={0} distance={15} castShadow penumbra={0.2} />
       <spotLightHelper args={[spotLightRef.current]} />
       <directionalLight ref={directionalLightRef} position={[5, 0, 2]} intensity={5} />
       <ambientLight ref={ambientLightRef} intensity={0.1} />
@@ -181,7 +190,7 @@ const Experience = () => {
       <ContactShadows opacity={0.5} width={1} height={1} position={[0, -0.99, 0]} scale={10} blur={2} far={10} resolution={256} color="#000000" />
       <group ref={groupRef}>
         {PLANET_DATA.map((planet, index) => (
-          <mesh key={index} position={planet.position} onClick={() => handleClick(index)} castShadow >
+          <mesh key={index} position={planet.position} onClick={() => handleClick(index)} onPointerEnter={() => play()} castShadow >
             <sphereGeometry args={[planet.size, 32, 32]} />
             <meshStandardMaterial map={textures[index]} />
           </mesh>))}
@@ -193,10 +202,14 @@ const Experience = () => {
 
 function App() {
 
-
   return (
-    <Canvas shadows dpr={[1, 2]}
+    <Canvas shadows="soft" dpr={[1, 2]}
     >
+      <EffectComposer >
+        <Noise opacity={0.02} />
+        <Bloom luminanceThreshold={0.1} luminanceSmoothing={0.9} height={300} />
+        <BrightnessContrast brightness={0.1} contrast={0.1} />
+      </EffectComposer>
       <OrbitControls />
       <color attach="background" args={
         ['black']
