@@ -238,6 +238,10 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
         (wallRef.current.material as MeshStandardMaterial).depthTest = false;
         (floorRef.current.material as MeshStandardMaterial).depthTest = false;
       }
+
+      if (directionalLightRef.current.intensity < 5) {
+        directionalLightRef.current.intensity += 0.1;
+      }
     }
   });
 
