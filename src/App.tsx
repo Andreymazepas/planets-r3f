@@ -16,7 +16,7 @@ const PLANET_DATA = [
     text: 'pink',
     color: 'hotpink',
     texture: '2k_jupiter.jpg',
-    audioPath: '../assets/HOLST The Planets 4. Jupiter the Bringer of Jollity - The Presidents Own U.S. Marine Band.mp3',
+    audioPath: '/assets/HOLST The Planets 4. Jupiter the Bringer of Jollity - The Presidents Own U.S. Marine Band.mp3',
     description: "The largest planet in our solar system, Jupiter is the gas giant named after the king of the Roman gods. It's astrological symbol is a stylized representation of the god's lightning bolt. The music is grand and majestic, reflecting the planet's size and power.",
     tilt: 0.1
   },
@@ -28,7 +28,7 @@ const PLANET_DATA = [
     text: 'no',
     color: 'green',
     texture: '2k_neptune.jpg',
-    audioPath: '../assets/HOLST The Planets 7. Neptune the Mystic - The Presidents Own U.S. Marine Band.mp3',
+    audioPath: '/assets/HOLST The Planets 7. Neptune the Mystic - The Presidents Own U.S. Marine Band.mp3',
     description: "Neptune is named after the Roman god of the sea. The music is mysterious and ethereal like the sea, and the planet's deep blue color.",
     tilt: 0
   },
@@ -40,7 +40,7 @@ const PLANET_DATA = [
     size: 0.8,
     color: 'blue',
     texture: '2k_mars.jpg',
-    audioPath: '../assets/HOLST The Planets 1. Mars the Bringer of War - The Presidents Own U.S. Marine Band.mp3',
+    audioPath: '/assets/HOLST The Planets 1. Mars the Bringer of War - The Presidents Own U.S. Marine Band.mp3',
     description: "Mars is named after the Roman god of war. The music is martial and aggressive, reflecting the planet's red color and the god's association with war.",
     tilt: 0
   },
@@ -64,7 +64,7 @@ const PLANET_DATA = [
     text: 'yellow',
     color: 'yellow',
     texture: '2k_venus_surface.jpg',
-    audioPath: '../assets/HOLST The Planets 2. Venus the Bringer of Peace - The Presidents Own U.S. Marine Band.mp3',
+    audioPath: '/assets/HOLST The Planets 2. Venus the Bringer of Peace - The Presidents Own U.S. Marine Band.mp3',
     description: "Venus is named after the Roman goddess of love and beauty. The music is serene and peaceful, reflecting the planet's bright appearance.",
     tilt: 0
   },
@@ -76,7 +76,7 @@ const PLANET_DATA = [
     text: 'orange',
     color: 'orange',
     texture: '2k_mercury.jpg',
-    audioPath: '../assets/HOLST The Planets 3. Mercury the Winged Messenger - The Presidents Own U.S. Marine Band.mp3',
+    audioPath: '/assets/HOLST The Planets 3. Mercury the Winged Messenger - The Presidents Own U.S. Marine Band.mp3',
     description: "In Roman mythology, Mercury is the swift messenger god, associated with communication and speed. The planet Mercury, the closest to the sun, reflects this swiftness with its rapid orbit.",
     tilt: 0
   },
@@ -88,7 +88,7 @@ const PLANET_DATA = [
     text: 'blue',
     color: 'blue',
     texture: '2k_uranus.jpg',
-    audioPath: '../assets/HOLST The Planets 6. Uranus the Magician - The Presidents Own U.S. Marine Band.mp3',
+    audioPath: '/assets/HOLST The Planets 6. Uranus the Magician - The Presidents Own U.S. Marine Band.mp3',
     description: "Uranus, named after the Greek sky god, is associated with the vastness of the cosmos. Its axial tilt is unique among the planets, making it roll on its side as it orbits, symbolizing the unpredictability of the sky.",
     tilt: 0
   },
@@ -100,7 +100,7 @@ const PLANET_DATA = [
     text: 'yellow',
     color: 'yellow',
     texture: '2k_saturn.jpg',
-    audioPath: '../assets/HOLST The Planets 5. Saturn the Bringer of Old Age - The Presidents Own U.S. Marine Band.mp3',
+    audioPath: '/assets/HOLST The Planets 5. Saturn the Bringer of Old Age - The Presidents Own U.S. Marine Band.mp3',
     description: "Saturn is named after the Roman god of agriculture. The music is slow and melancholic, rising to a climax before fading away, reflecting the planet's golden color and the god's association with time and old age.",
     tilt: -0.2
   }
@@ -112,12 +112,12 @@ const SATURN_RING = {
 
 const renderSaturnRing = () => {
   // load glb from assets folder
-  const gltf = useGLTF('../assets/saturn_ring.glb');
+  const gltf = useGLTF('/assets/saturn_ring.glb');
   // override the material
   gltf.scene.traverse((child) => {
     if (child instanceof Mesh) {
       child.material = new MeshStandardMaterial({
-        map: useTexture('../assets/2k_saturn_ring_alpha.png'),
+        map: useTexture('/assets/2k_saturn_ring_alpha.png'),
         metalness: 0.5,
         roughness: 0.5,
         side: DoubleSide,
@@ -130,7 +130,7 @@ const renderSaturnRing = () => {
 }
 
 const renderSun = () => {
-  const sunTexture = useTexture('../assets/2k_sun.jpg');
+  const sunTexture = useTexture('/assets/2k_sun.jpg');
   return (
     <mesh position={[10, -10, 3]}>
       <sphereGeometry args={[10, 64, 64]} />
@@ -146,7 +146,7 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
   const [selectedPlanet, setSelectedPlanet] = React.useState(-1);
   const [planetPos, setPlanetPos] = React.useState<Vector3>(new Vector3(0, 0, 0));
   const [hoverPlanet, setHoverPlanet] = React.useState(-1);
-  const hoverSound = "../assets/405159__rayolf__btn_hover_2.wav";
+  const hoverSound = "/assets/405159__rayolf__btn_hover_2.wav";
 
 
   const [playHover, { stopHover }] = useSound(hoverSound, { volume: 0.5 });
@@ -176,7 +176,7 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
 
   const textures = [];
   for (let i = 0; i < PLANET_DATA.length; i++) {
-    textures.push(useTexture(`../assets/${PLANET_DATA[i].texture}`));
+    textures.push(useTexture(`/assets/${PLANET_DATA[i].texture}`));
   }
 
   const handleClick = (index: number) => {
@@ -298,7 +298,7 @@ function App() {
   const [ready, setReady] = React.useState(false);
   const [text, setText] = React.useState('');
   const [selectedPlanet, setSelectedPlanet] = React.useState(-1);
-  const startSound = "../assets/symphony-orchestra-tuning-before-concert-34066.mp3";
+  const startSound = "/assets/symphony-orchestra-tuning-before-concert-34066.mp3";
   const [playStart, { stop }] = useSound(startSound, { volume: 0.5 });
   const [reset, setReset] = React.useState(false);
   const [showCredits, setShowCredits] = React.useState(false);
