@@ -331,7 +331,17 @@ function App() {
           <BrightnessContrast brightness={0} contrast={0.1} />
           <FXAA />
         </EffectComposer>
-        <OrbitControls />
+        {/* make a very limited orbit control, just to see slightly around the planets */}
+        <OrbitControls
+          enablePan={false}
+          enableZoom={false}
+          enableDamping
+          dampingFactor={0.1}
+          maxAzimuthAngle={Math.PI / 10}
+          minAzimuthAngle={-Math.PI / 10}
+          maxPolarAngle={Math.PI / 2 + (selectedPlanet === -1 ? 0.2 : 0.0)}
+          minPolarAngle={Math.PI / 2 - 0.2}
+        />
         <color attach="background" args={
           ['black']
         } />
