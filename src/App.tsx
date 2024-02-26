@@ -1,7 +1,7 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { ContactShadows, Effects, Environment, OrbitControls, Outlines, PerspectiveCamera, Stars, Stats, useTexture, } from '@react-three/drei';
+import { ContactShadows, Effects, Environment, OrbitControls, Outlines, PerspectiveCamera, Stars, Stats, useGLTF, useTexture, } from '@react-three/drei';
 import React, { useEffect, useRef } from 'react';
-import { AmbientLight, BackSide, Color, DirectionalLight, DoubleSide, Group, Mesh, SpotLight, SpotLightShadow, Vector3 } from 'three';
+import { AmbientLight, BackSide, Color, DirectionalLight, DoubleSide, Group, Mesh, MeshStandardMaterial, SpotLight, SpotLightShadow, Vector3 } from 'three';
 import { Bloom, BrightnessContrast, EffectComposer, FXAA, Noise, Outline } from '@react-three/postprocessing';
 import useSound from 'use-sound';
 
@@ -17,7 +17,8 @@ const PLANET_DATA = [
     color: 'hotpink',
     texture: '2k_jupiter.jpg',
     audioPath: '../assets/HOLST The Planets 4. Jupiter the Bringer of Jollity - The Presidents Own U.S. Marine Band.mp3',
-    description: "The largest planet in our solar system, Jupiter is the gas giant named after the king of the Roman gods. It's astrological symbol is a stylized representation of the god's lightning bolt. The music is grand and majestic, reflecting the planet's size and power."
+    description: "The largest planet in our solar system, Jupiter is the gas giant named after the king of the Roman gods. It's astrological symbol is a stylized representation of the god's lightning bolt. The music is grand and majestic, reflecting the planet's size and power.",
+    tilt: 0.1
   },
   {
     name: 'Neptune',
@@ -28,7 +29,8 @@ const PLANET_DATA = [
     color: 'green',
     texture: '2k_neptune.jpg',
     audioPath: '../assets/HOLST The Planets 7. Neptune the Mystic - The Presidents Own U.S. Marine Band.mp3',
-    description: "Neptune is named after the Roman god of the sea. The music is mysterious and ethereal like the sea, and the planet's deep blue color."
+    description: "Neptune is named after the Roman god of the sea. The music is mysterious and ethereal like the sea, and the planet's deep blue color.",
+    tilt: 0
   },
   {
     name: 'Mars',
@@ -39,7 +41,8 @@ const PLANET_DATA = [
     color: 'blue',
     texture: '2k_mars.jpg',
     audioPath: '../assets/HOLST The Planets 5. Mars the Bringer of War - The Presidents Own U.S. Marine Band.mp3',
-    description: "Mars is named after the Roman god of war. The music is martial and aggressive, reflecting the planet's red color and the god's association with war."
+    description: "Mars is named after the Roman god of war. The music is martial and aggressive, reflecting the planet's red color and the god's association with war.",
+    tilt: 0
   },
   {
     name: 'Earth',
@@ -50,7 +53,8 @@ const PLANET_DATA = [
     color: 'green',
     texture: '2k_earth_daymap.jpg',
     audioPath: undefined,
-    description: "Our planet doesn't hold any place in Holst's suite. Although it's representation in mythology is as Gaia, the ancestral mother of all life, in astrology it is the point of reference for all other planets."
+    description: "Our planet doesn't hold any place in Holst's suite. Although it's representation in mythology is as Gaia, the ancestral mother of all life, in astrology it is the point of reference for all other planets.",
+    tilt: 0
   },
   {
     name: 'Venus',
@@ -61,7 +65,8 @@ const PLANET_DATA = [
     color: 'yellow',
     texture: '2k_venus_surface.jpg',
     audioPath: '../assets/HOLST The Planets 2. Venus the Bringer of Peace - The Presidents Own U.S. Marine Band.mp3',
-    description: "Venus is named after the Roman goddess of love and beauty. The music is serene and peaceful, reflecting the planet's bright appearance."
+    description: "Venus is named after the Roman goddess of love and beauty. The music is serene and peaceful, reflecting the planet's bright appearance.",
+    tilt: 0
   },
   {
     name: 'Mercury',
@@ -72,7 +77,8 @@ const PLANET_DATA = [
     color: 'orange',
     texture: '2k_mercury.jpg',
     audioPath: '../assets/HOLST The Planets 3. Mercury the Winged Messenger - The Presidents Own U.S. Marine Band.mp3',
-    description: "In Roman mythology, Mercury is the swift messenger god, associated with communication and speed. The planet Mercury, the closest to the sun, reflects this swiftness with its rapid orbit."
+    description: "In Roman mythology, Mercury is the swift messenger god, associated with communication and speed. The planet Mercury, the closest to the sun, reflects this swiftness with its rapid orbit.",
+    tilt: 0
   },
   {
     name: 'Uranus',
@@ -83,7 +89,8 @@ const PLANET_DATA = [
     color: 'blue',
     texture: '2k_uranus.jpg',
     audioPath: '../assets/HOLST The Planets 6. Uranus the Magician - The Presidents Own U.S. Marine Band.mp3',
-    description: "Uranus, named after the Greek sky god, is associated with the vastness of the cosmos. Its axial tilt is unique among the planets, making it roll on its side as it orbits, symbolizing the unpredictability of the sky."
+    description: "Uranus, named after the Greek sky god, is associated with the vastness of the cosmos. Its axial tilt is unique among the planets, making it roll on its side as it orbits, symbolizing the unpredictability of the sky.",
+    tilt: 0
   },
   {
     name: 'Saturn',
@@ -94,12 +101,33 @@ const PLANET_DATA = [
     color: 'yellow',
     texture: '2k_saturn.jpg',
     audioPath: '../assets/HOLST The Planets 5. Saturn the Bringer of Old Age - The Presidents Own U.S. Marine Band.mp3',
-    description: "Saturn is named after the Roman god of agriculture. The music is slow and melancholic, rising to a climax before fading away, reflecting the planet's golden color and the god's association with time and old age."
+    description: "Saturn is named after the Roman god of agriculture. The music is slow and melancholic, rising to a climax before fading away, reflecting the planet's golden color and the god's association with time and old age.",
+    tilt: -0.2
   }
-
 ]
 
+const SATURN_RING = {
+  position: PLANET_DATA[7].position,
+}
 
+const renderSaturnRing = () => {
+  // load glb from assets folder
+  const gltf = useGLTF('../assets/saturn_ring.glb');
+  // override the material
+  gltf.scene.traverse((child) => {
+    if (child instanceof Mesh) {
+      child.material = new MeshStandardMaterial({
+        map: useTexture('../assets/2k_saturn_ring_alpha.png'),
+        metalness: 0.5,
+        roughness: 0.5,
+        side: DoubleSide,
+        transparent: true,
+      });
+    }
+  });
+
+  return <primitive rotation={[0.1, 0, -0.2]} object={gltf.scene} position={SATURN_RING.position} scale={[2.5, 2.5, 2.5]} />
+}
 
 
 const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex: (index: number) => void, reset: boolean }) => {
@@ -134,8 +162,7 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
     new AmbientLight()
   );
 
-  const environmentTexture = useTexture('../assets/2k_stars_milky_way.jpg');
-  // make a structure to save all the planets textures, then load then accordinglt
+
   const textures = [];
   for (let i = 0; i < PLANET_DATA.length; i++) {
     textures.push(useTexture(`../assets/${PLANET_DATA[i].texture}`));
@@ -145,7 +172,7 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
     setSelectedPlanet(index);
     setHoverPlanet(-1);
     const correctedY = PLANET_DATA[index].position[1] + (1 - PLANET_DATA[index].size);
-    setPlanetPos(new Vector3(-PLANET_DATA[index].position[0] - 2, -correctedY, -PLANET_DATA[index].position[2]));
+    setPlanetPos(new Vector3(-PLANET_DATA[index].position[0] - 2, -correctedY, -PLANET_DATA[index].position[2] + (PLANET_DATA[index].name === 'Saturn' ? 1.5 : 0)));
   }
 
   const resetEverything = () => {
@@ -241,11 +268,14 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
       <ContactShadows opacity={0.5} width={2} height={1} position={[0, -0.99, 0]} scale={10} blur={1} far={10} resolution={256} color="#000000" />
       <group ref={groupRef}>
         {PLANET_DATA.map((planet, index) => (
-          <mesh key={index} position={planet.position} onClick={() => handleClick(index)} castShadow onPointerEnter={() => onHover(index)} onPointerLeave={onUnhover}>
+          <mesh key={index} position={planet.position} onClick={() => handleClick(index)} castShadow onPointerEnter={() => onHover(index)} onPointerLeave={onUnhover} rotation={[
+            0, 0, planet.tilt
+          ]}>
             <sphereGeometry args={[planet.size, 32, 32]} />
             <meshStandardMaterial map={textures[index]} />
             <Outlines visible={hoverPlanet === index} color={"white"} />
           </mesh>))}
+        {renderSaturnRing()}
       </group>
 
     </>
