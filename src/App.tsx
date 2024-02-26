@@ -1,5 +1,5 @@
 import { Canvas, useFrame } from '@react-three/fiber'
-import { ContactShadows, Effects, Environment, OrbitControls, Outlines, PerspectiveCamera, Stars, useTexture, } from '@react-three/drei';
+import { ContactShadows, Effects, Environment, OrbitControls, Outlines, PerspectiveCamera, Stars, Stats, useTexture, } from '@react-three/drei';
 import React, { useEffect, useRef } from 'react';
 import { AmbientLight, BackSide, Color, DirectionalLight, DoubleSide, Group, Mesh, SpotLight, SpotLightShadow, Vector3 } from 'three';
 import { Bloom, BrightnessContrast, EffectComposer, FXAA, Noise, Outline } from '@react-three/postprocessing';
@@ -9,76 +9,92 @@ import useSound from 'use-sound';
 
 const PLANET_DATA = [
   {
-    name: 'jupiter',
+    name: 'Jupiter',
+    subtitle: 'The bringer of jollity',
     position: [-15, -15, -28],
     size: 1,
     text: 'pink',
     color: 'hotpink',
     texture: '2k_jupiter.jpg',
-    audioPath: '../assets/HOLST The Planets 4. Jupiter the Bringer of Jollity - The Presidents Own U.S. Marine Band.mp3'
+    audioPath: '../assets/HOLST The Planets 4. Jupiter the Bringer of Jollity - The Presidents Own U.S. Marine Band.mp3',
+    description: "The largest planet in our solar system, Jupiter is the gas giant named after the king of the Roman gods. It's astrological symbol is a stylized representation of the god's lightning bolt. The music is grand and majestic, reflecting the planet's size and power."
   },
   {
-    name: 'neptune',
+    name: 'Neptune',
+    subtitle: 'The mystic',
     position: [15, 1, -28],
     size: 1.5,
     text: 'no',
     color: 'green',
     texture: '2k_neptune.jpg',
-    audioPath: '../assets/HOLST The Planets 7. Neptune the Mystic - The Presidents Own U.S. Marine Band.mp3'
+    audioPath: '../assets/HOLST The Planets 7. Neptune the Mystic - The Presidents Own U.S. Marine Band.mp3',
+    description: "Neptune is named after the Roman god of the sea. The music is mysterious and ethereal like the sea, and the planet's deep blue color."
   },
   {
-    name: 'mars',
+    name: 'Mars',
+    subtitle: 'The bringer of war',
     position: [15, -15, -28],
     text: 'blue',
     size: 0.8,
     color: 'blue',
     texture: '2k_mars.jpg',
-    audioPath: '../assets/HOLST The Planets 5. Mars the Bringer of War - The Presidents Own U.S. Marine Band.mp3'
+    audioPath: '../assets/HOLST The Planets 5. Mars the Bringer of War - The Presidents Own U.S. Marine Band.mp3',
+    description: "Mars is named after the Roman god of war. The music is martial and aggressive, reflecting the planet's red color and the god's association with war."
   },
   {
-    name: 'earth',
+    name: 'Earth',
+    subtitle: 'The ancestral mother',
     position: [-15, 1, -28],
     size: 1,
     text: 'green',
     color: 'green',
     texture: '2k_earth_daymap.jpg',
-    audioPath: undefined
+    audioPath: undefined,
+    description: "Our planet doesn't hold any place in Holst's suite. Although it's representation in mythology is as Gaia, the ancestral mother of all life, in astrology it is the point of reference for all other planets."
   },
   {
-    name: 'venus',
+    name: 'Venus',
+    subtitle: 'The bringer of peace',
     position: [0, 0, -28],
     size: 1,
     text: 'yellow',
     color: 'yellow',
     texture: '2k_venus_surface.jpg',
-    audioPath: '../assets/HOLST The Planets 2. Venus the Bringer of Peace - The Presidents Own U.S. Marine Band.mp3'
+    audioPath: '../assets/HOLST The Planets 2. Venus the Bringer of Peace - The Presidents Own U.S. Marine Band.mp3',
+    description: "Venus is named after the Roman goddess of love and beauty. The music is serene and peaceful, reflecting the planet's bright appearance."
   },
   {
-    name: 'mercury',
+    name: 'Mercury',
+    subtitle: 'The winged messenger',
     position: [0, -15, -28],
     size: 0.5,
     text: 'orange',
     color: 'orange',
     texture: '2k_mercury.jpg',
-    audioPath: '../assets/HOLST The Planets 3. Mercury the Winged Messenger - The Presidents Own U.S. Marine Band.mp3'
+    audioPath: '../assets/HOLST The Planets 3. Mercury the Winged Messenger - The Presidents Own U.S. Marine Band.mp3',
+    description: "In Roman mythology, Mercury is the swift messenger god, associated with communication and speed. The planet Mercury, the closest to the sun, reflects this swiftness with its rapid orbit."
   },
   {
-    name: 'uranus',
+    name: 'Uranus',
+    subtitle: 'The magician',
     position: [0, 15, -28],
     size: 1.5,
     text: 'blue',
     color: 'blue',
     texture: '2k_uranus.jpg',
-    audioPath: '../assets/HOLST The Planets 6. Uranus the Magician - The Presidents Own U.S. Marine Band.mp3'
+    audioPath: '../assets/HOLST The Planets 6. Uranus the Magician - The Presidents Own U.S. Marine Band.mp3',
+    description: "Uranus, named after the Greek sky god, is associated with the vastness of the cosmos. Its axial tilt is unique among the planets, making it roll on its side as it orbits, symbolizing the unpredictability of the sky."
   },
   {
-    name: 'saturn',
+    name: 'Saturn',
+    subtitle: 'The bringer of old age',
     position: [-15, 15, -28],
     size: 1.5,
     text: 'yellow',
     color: 'yellow',
     texture: '2k_saturn.jpg',
-    audioPath: '../assets/HOLST The Planets 5. Saturn the Bringer of Old Age - The Presidents Own U.S. Marine Band.mp3'
+    audioPath: '../assets/HOLST The Planets 5. Saturn the Bringer of Old Age - The Presidents Own U.S. Marine Band.mp3',
+    description: "Saturn is named after the Roman god of agriculture. The music is slow and melancholic, rising to a climax before fading away, reflecting the planet's golden color and the god's association with time and old age."
   }
 
 ]
@@ -150,7 +166,7 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
   useFrame(() => {
     if (groupRef.current === undefined) return;
     groupRef.current.position.lerp(planetPos, 0.01);
-    if (groupRef.current.position.distanceTo(planetPos) < 5 && selectedPlanet !== -1) {
+    if (!ready && selectedPlanet !== -1 && groupRef.current.position.distanceTo(planetPos) < 5) {
       setReady(true);
       setSelectedPlanetIndex(selectedPlanet);
     }
@@ -196,19 +212,20 @@ const Experience = ({ setSelectedPlanetIndex, reset }: { setSelectedPlanetIndex:
 
   const onHover = (index: number) => {
     if (hoverPlanet !== index && !ready) {
+      document.body.style.cursor = 'pointer';
       playHover();
       setHoverPlanet(index);
     }
   }
 
   const onUnhover = () => {
+    document.body.style.cursor = 'auto';
     setHoverPlanet(-1);
   }
 
   return (
     <>
       <spotLight ref={spotLightRef} position={[3, 5, 5]} intensity={0} angle={0.8} decay={0} distance={15} castShadow penumbra={0.2} />
-      <spotLightHelper args={[spotLightRef.current]} />
       <directionalLight ref={directionalLightRef} position={[5, 0, 2]} intensity={5} />
       <ambientLight ref={ambientLightRef} intensity={0.1} />
       <mesh position={[0, 0, -2]} ref={wallRef} receiveShadow>
@@ -242,6 +259,7 @@ function App() {
   const startSound = "../assets/symphony-orchestra-tuning-before-concert-34066.mp3";
   const [playStart, { stopStart }] = useSound(startSound, { volume: 0.5 });
   const [reset, setReset] = React.useState(false);
+  const [showCredits, setShowCredits] = React.useState(false);
 
   const handleClick = () => {
     setReady(true);
@@ -275,22 +293,48 @@ function App() {
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
         {ready && <Experience setSelectedPlanetIndex={setSelectedPlanet} reset={reset} />}
-
+        <Stats />
       </Canvas>
-      {!ready && <div style={{ position: 'absolute', top: 0, left: 0, color: 'white' }}>
-        press to play
-        <button onClick={handleClick}>play</button>
+      {!ready && <div className='glass startScreen'>
+        <h1>THE PLANETS</h1>
+        <h2>Exploring our solar system with Gustav Holst's celestial compositions</h2>
+        <p>Click begin and select a planet!</p>
+        <button className="startButton" onClick={handleClick}>begin</button>
       </div>}
-      {(selectedPlanet !== -1) && <div style={{ position: 'absolute', top: "50%", right: "30%", color: 'white', background: "#3939ff55", borderRadius: "32px", fontSize: "10rem" }}>
-        {PLANET_DATA[selectedPlanet] ? PLANET_DATA[selectedPlanet].name : ''}
+      {(selectedPlanet !== -1) && <><div className='glass infoContainer'>
+
+        <h2>{PLANET_DATA[selectedPlanet] ? PLANET_DATA[selectedPlanet].name : ''}</h2>
+        <h3>{PLANET_DATA[selectedPlanet] ? PLANET_DATA[selectedPlanet].subtitle : ''}</h3>
+
+        <p>{PLANET_DATA[selectedPlanet] ? PLANET_DATA[selectedPlanet].description : ''}</p>
         <audio autoPlay controls>
           <source
             src={PLANET_DATA[selectedPlanet].audioPath}
             type="audio/mp4" />
         </audio>
-      </div>}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, color: 'white' }}>
-        <button onClick={() => setReset(true)}>reset</button>
+      </div>
+        <div style={{ position: 'absolute', top: "10%", left: "10%", color: 'white' }}>
+          <button className="backButton" onClick={() => setReset(true)}>BACK</button>
+        </div>
+      </>
+      }
+
+      {showCredits && <div className='glass credits'>
+        <button className="creditsBackButton" onClick={() => setShowCredits(false)}>CLOSE</button>
+        <h3>Textures:</h3>
+        <p>Textures for planets and sun are provided by<a href="https://www.solarsystemscope.com/textures/" target="_blank">Solar System Scope</a>.</p>
+        <hr />
+
+        <h3>Music:</h3>
+        <p>The soundtrack is Gustav Holst's The Planets performed by <a href="https://www.youtube.com/playlist?list=PLA7no0L9zTk43f_g5mrAeTfyAni0FMICG" target="_blank">"The President's Own" U.S. Marine Band</a>.</p>
+      </div>
+      }
+
+      <div className="bottomInfo">
+        <button className="creditsButton" onClick={() => setShowCredits(true)}>Credits</button>
+        <a>Github</a>
+        <a>Twitter</a>
+        <a>Instagram</a>
       </div>
 
     </>

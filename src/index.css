@@ -1,4 +1,5 @@
-/* standard three.js css */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
 body {
   margin: 0;
   overflow: hidden;
@@ -9,4 +10,162 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+
+.glass {
+  /* From https://css.glass */
+  background: rgba(44, 42, 42, 0.23);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  font-family: 'space mono', monospace;
+}
+
+.infoContainer {
+  position: absolute;
+  top: 10%;
+  height: 80vh;
+  width: 40%;
+  right: 40px;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  color: white;
+}
+
+.infoContainer p {
+  max-width: 75%;
+}
+
+.backButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  font-family: 'space mono', monospace;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.backButton:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.startScreen {
+  position: absolute;
+  height: 30vh;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  color: white;
+  align-items: center;
+  justify-content: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.startScreen h1 {
+  font-size: 3rem;
+  font-family: 'space mono', monospace;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  margin-bottom: 0;
+}
+
+.startButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  font-family: 'space mono', monospace;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+}
+
+.startButton:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.bottomInfo {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 90%;
+  display: flex;
+  justify-content: end;
+  padding: 20px;
+  color: white;
+  font-family: 'space mono', monospace;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.bottomInfo a {
+  color: white;
+  text-decoration: none;
+  margin: 0 10px;
+}
+
+.bottomInfo a:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.credits {
+  position: absolute;
+  bottom: 10%;
+  right: 1%;
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  padding: 20px;
+  color: white;
+  font-family: 'space mono', monospace;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.credits a {
+  color: white;
+  text-decoration: none;
+  margin: 0 10px;
+}
+
+.credits a:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.creditsBackButton {
+  background: none;
+  width: fit-content;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  font-family: 'space mono', monospace;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.creditsBackButton:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.creditsButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  font-family: 'space mono', monospace;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  padding-top: 0;
+  margin-right: 5px;
+}
+
+.creditsButton:hover {
+  cursor: pointer;
+  text-decoration: underline;
 }
